@@ -13,4 +13,4 @@ RUN go build -o ./bin/czwr-mailing-${SVC_NAME} ./cmd/${SVC_NAME}/main.go
 
 EXPOSE 8884
 
-ENTRYPOINT ["./bin/czwr-mailing-prorile"]
+ENTRYPOINT ["./bin/czwr-mailing-profile"]
