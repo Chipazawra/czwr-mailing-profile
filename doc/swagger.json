@@ -1,0 +1,91 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample mailing servivce.",
+        "title": "czwrMailing - profile service",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/debug/pprof_disable": {
+            "post": {
+                "description": "disable pprof API on service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pprofwrapper"
+                ],
+                "summary": "disable pprof API",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/debug/pprof_enable": {
+            "post": {
+                "description": "enable pprof API on service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pprofwrapper"
+                ],
+                "summary": "enable pprof API",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/profile/i": {
+            "get": {
+                "description": "get auth data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "show user info",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/profile/me": {
+            "get": {
+                "description": "get auth data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "valid jwt token and show user info",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+    }
+}

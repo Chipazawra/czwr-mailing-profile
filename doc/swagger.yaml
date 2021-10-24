@@ -1,0 +1,59 @@
+info:
+  contact: {}
+  description: This is a sample mailing servivce.
+  title: czwrMailing - profile service
+  version: "1.0"
+paths:
+  /debug/pprof_disable:
+    post:
+      consumes:
+      - application/json
+      description: disable pprof API on service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: disable pprof API
+      tags:
+      - pprofwrapper
+  /debug/pprof_enable:
+    post:
+      consumes:
+      - application/json
+      description: enable pprof API on service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: enable pprof API
+      tags:
+      - pprofwrapper
+  /profile/i:
+    get:
+      consumes:
+      - application/json
+      description: get auth data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: show user info
+      tags:
+      - profile
+  /profile/me:
+    get:
+      consumes:
+      - application/json
+      description: get auth data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: valid jwt token and show user info
+      tags:
+      - profile
+swagger: "2.0"

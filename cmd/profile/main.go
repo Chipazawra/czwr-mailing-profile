@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Chipazawra/czwr-mailing-auth/pkg/pprofwrapper"
 	_ "github.com/Chipazawra/czwr-mailing-profile/doc"
+	"github.com/Chipazawra/czwr-mailing-profile/internal/profile"
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 var (
@@ -42,13 +46,13 @@ func main() {
 	httpEngine := gin.New()
 	httpEngine.Use(gin.Recovery())
 
-	//service := auth.New(auth.DefaultConfig)
-	//group := service.Register(httpEngine)
+	service := profile.New()
+	group := service.Register(httpEngine)
 	//profiler
-	//pprofrp := pprofwrapper.New()
-	//pprofrp.Register(group)
+	pprofrp := pprofwrapper.New()
+	pprofrp.Register(group)
 	//doc
-	//group.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	group.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	err := httpEngine.Run(fmt.Sprintf("%v:%v", host, port))
 
