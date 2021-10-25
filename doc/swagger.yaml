@@ -56,4 +56,100 @@ paths:
       summary: valid jwt token and show user info
       tags:
       - profile
+  /profile/reciviers/{usr}:
+    get:
+      consumes:
+      - application/json
+      description: get receivers
+      parameters:
+      - description: USR
+        in: query
+        name: string
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: get receivers list
+      tags:
+      - profile
+  /profile/reciviers/{usr}/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete receiver
+      parameters:
+      - description: USR
+        in: query
+        name: string
+        required: true
+        type: string
+      - description: RECEIVER
+        in: query
+        name: string
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: delete receiver from receiver list
+      tags:
+      - profile
+  /profile/reciviers/{usr}/{id}/{receiver}:
+    patch:
+      consumes:
+      - application/json
+      description: update receiver
+      parameters:
+      - description: USR
+        in: query
+        name: string
+        required: true
+        type: string
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: RECEIVER
+        in: query
+        name: string
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: update receiver in receiver list
+      tags:
+      - profile
+  /profile/reciviers/{usr}/{receiver}:
+    post:
+      consumes:
+      - application/json
+      description: create receiver
+      parameters:
+      - description: USR
+        in: query
+        name: string
+        required: true
+        type: string
+      - description: RECEIVER
+        in: query
+        name: string
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: create receiver in receivers list
+      tags:
+      - profile
 swagger: "2.0"

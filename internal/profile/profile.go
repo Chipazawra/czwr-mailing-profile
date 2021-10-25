@@ -1,7 +1,9 @@
 package profile
 
 import (
+	"html/template"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"github.com/Chipazawra/czwr-mailing-auth/pkg/jwtmng"
@@ -20,8 +22,30 @@ type Profile struct {
 	dbctx IDBctx
 }
 
+type Template struct {
+	id     string
+	file   string
+	params []string
+}
+
 func New(dbctx IDBctx) *Profile {
 	return &Profile{dbctx: dbctx}
+}
+
+func (p *Profile) Register(g *gin.Engine) *gin.RouterGroup {
+
+	profile := g.Group("/profile")
+	profile.GET("/i", p.iHandler)
+	profile.GET("/me", p.meHandler)
+
+	reciviers := profile.Group("/reciviers")
+	reciviers.POST("/:usr/:receiver", p.CreateHandler)
+	reciviers.GET("/:usr", p.ReadHandler)
+	reciviers.PATCH("/:usr/:id/:receiver", p.UpdateHandler)
+	reciviers.DELETE("/:usr/:id", p.DeleteHandler)
+	reciviers.POST("/upload_template", p.UploadTemplateHandler)
+
+	return profile
 }
 
 func (r *Profile) Create(usr, receiver string) (uint, error) {
@@ -31,7 +55,6 @@ func (r *Profile) Create(usr, receiver string) (uint, error) {
 		return 0, err
 	}
 	return id, nil
-
 }
 
 func (r *Profile) Read(usr string) ([]string, error) {
@@ -41,7 +64,6 @@ func (r *Profile) Read(usr string) ([]string, error) {
 		return nil, err
 	}
 	return lst, nil
-
 }
 
 func (r *Profile) Update(usr string, id uint, receiver string) error {
@@ -50,8 +72,7 @@ func (r *Profile) Update(usr string, id uint, receiver string) error {
 	if err != nil {
 		return err
 	}
-	return err
-
+	return nil
 }
 
 func (r *Profile) Delete(usr string, id uint) error {
@@ -63,16 +84,32 @@ func (r *Profile) Delete(usr string, id uint) error {
 	return nil
 }
 
-func (p *Profile) Register(g *gin.Engine) *gin.RouterGroup {
-	gr := g.Group("/profile")
-	gr.GET("/i", p.iHandler)
-	gr.GET("/me", p.meHandler)
-	gr.POST("/reciviers/:usr/:receiver", p.CreateHandler)
-	gr.GET("/reciviers/:usr", p.ReadHandler)
-	gr.PATCH("/reciviers/:usr/:id/:receiver", p.UpdateHandler)
-	gr.DELETE("/reciviers/:usr/:id", p.DeleteHandler)
+func (r *Profile) UploadTemplate(usr string, tmpl string) error {
 
-	return gr
+	return nil
+}
+
+func (p *Profile) pHandler(c *gin.Context, fn func(val string) (jwt.Claims, error)) {
+
+	ac, err := c.Request.Cookie("access")
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "access token not found.",
+		})
+		return
+	}
+
+	data, err := fn(ac.Value)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "invalid token",
+		})
+		return
+	} else {
+		c.JSON(http.StatusOK, data)
+	}
 }
 
 // profile i godoc
@@ -99,38 +136,16 @@ func (p *Profile) meHandler(c *gin.Context) {
 	p.pHandler(c, jwtmng.ValidToken)
 }
 
-func (p *Profile) pHandler(c *gin.Context, fn func(val string) (jwt.Claims, error)) {
-
-	ac, err := c.Request.Cookie("access")
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": "access token not found.",
-		})
-		return
-	}
-
-	data, err := fn(ac.Value)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": "invalid token",
-		})
-		return
-	} else {
-		c.JSON(http.StatusOK, data)
-	}
-
-}
-
 // profile receivers godoc
-// @Summary create recievier in recieviers list
+// @Summary create receiver in receivers list
 // @Tags profile
-// @Description get auth data
+// @Description create receiver
 // @Accept  json
 // @Produce  json
 // @Success 200
-// @Router /reciviers/:usr/:receiver [post]
+// @Param usr string query string true "USR"
+// @Param receiver string query string true "RECEIVER"
+// @Router /profile/reciviers/{usr}/{receiver} [post]
 func (r *Profile) CreateHandler(c *gin.Context) {
 
 	usr := c.Param("usr")
@@ -150,13 +165,14 @@ func (r *Profile) CreateHandler(c *gin.Context) {
 }
 
 // profile receivers godoc
-// @Summary get recieviers list
+// @Summary get receivers list
 // @Tags profile
-// @Description get auth data
+// @Description get receivers
 // @Accept  json
 // @Produce  json
 // @Success 200
-// @Router /reciviers/:usr [get]
+// @Param usr string query string true "USR"
+// @Router /profile/reciviers/{usr} [get]
 func (r *Profile) ReadHandler(c *gin.Context) {
 
 	usr := c.Param("usr")
@@ -176,13 +192,16 @@ func (r *Profile) ReadHandler(c *gin.Context) {
 }
 
 // profile receivers godoc
-// @Summary update recievier in recievier list
+// @Summary update receiver in receiver list
 // @Tags profile
-// @Description get auth data
+// @Description update receiver
 // @Accept  json
 // @Produce  json
 // @Success 200
-// @Router /reciviers/:usr/:id/:receiver [patch]
+// @Param usr string query string true "USR"
+// @Param id path int true "ID"
+// @Param receiver string query string true "RECEIVER"
+// @Router /profile/reciviers/{usr}/{id}/{receiver} [patch]
 func (r *Profile) UpdateHandler(c *gin.Context) {
 
 	usr := c.Param("usr")
@@ -211,13 +230,15 @@ func (r *Profile) UpdateHandler(c *gin.Context) {
 }
 
 // profile receivers godoc
-// @Summary delete recievier from recievier list
+// @Summary delete receiver from receiver list
 // @Tags profile
-// @Description get auth data
+// @Description delete receiver
 // @Accept  json
 // @Produce  json
 // @Success 200
-// @Router /reciviers/:usr/:id [delete]
+// @Param usr string query string true "USR"
+// @Param receiver string query string true "RECEIVER"
+// @Router /profile/reciviers/{usr}/{id} [delete]
 func (r *Profile) DeleteHandler(c *gin.Context) {
 
 	usr := c.Param("usr")
@@ -243,4 +264,39 @@ func (r *Profile) DeleteHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "deleted",
 	})
+}
+
+// profile receivers godoc
+// @Summary upload template data
+// @Tags profile
+// @Description upload data
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Router /profile/upload_template [delete]
+func (r *Profile) UploadTemplateHandler(c *gin.Context) {
+
+	raw, err := c.GetRawData()
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	tmpl := template.New("tmpl")
+
+	_, err = tmpl.Parse(string(raw))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	rx, _ := regexp.Compile(`{{ \.(.*?)}}`)
+	as := rx.FindAllStringSubmatch(string(raw), -1)
+	c.JSON(http.StatusOK, as)
 }

@@ -82,7 +82,7 @@ func logfmt(params gin.LogFormatterParams) string {
 		params.Latency = params.Latency - params.Latency%time.Second
 	}
 
-	return fmt.Sprintf("[CZWR-LOG] %v |%s %3d %s| %13v | %15s |%s %-7s %s %#v\n%s",
+	return fmt.Sprintf("[PROFILE-LOG] %v |%s %3d %s| %13v | %15s |%s %-7s %s %#v\n%s",
 		params.TimeStamp.Format("2006/01/02 - 15:04:05"),
 		statusColor, params.StatusCode, resetColor,
 		params.Latency,

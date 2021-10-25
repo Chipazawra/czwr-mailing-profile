@@ -102,6 +102,150 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/profile/reciviers/{usr}": {
+            "get": {
+                "description": "get receivers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "get receivers list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "USR",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/profile/reciviers/{usr}/{id}": {
+            "delete": {
+                "description": "delete receiver",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "delete receiver from receiver list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "USR",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "RECEIVER",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/profile/reciviers/{usr}/{id}/{receiver}": {
+            "patch": {
+                "description": "update receiver",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "update receiver in receiver list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "USR",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "RECEIVER",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/profile/reciviers/{usr}/{receiver}": {
+            "post": {
+                "description": "create receiver",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "create receiver in receivers list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "USR",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "RECEIVER",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
         }
     }
 }`
