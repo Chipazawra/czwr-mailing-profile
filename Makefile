@@ -2,6 +2,10 @@ SVC_NAME=profile
 BINARY_NAME=czwr-mailing-${SVC_NAME}
 PORT=8884
 
+test:
+	go test ./internal/dbcontext/inmemoryctx/ -v
+	go test ./internal/profile/ -v
+
 swag:
 	swag init -d ./cmd/${SVC_NAME}/ -o ./doc -g main.go --parseDependency
 
