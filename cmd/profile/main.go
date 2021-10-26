@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/Chipazawra/czwr-mailing-auth/pkg/pprofwrapper"
 	_ "github.com/Chipazawra/czwr-mailing-profile/doc"
-	"github.com/Chipazawra/czwr-mailing-profile/internal/dbcontext/inmemoryctx"
+	mongoctx "github.com/Chipazawra/czwr-mailing-profile/internal/dbcontext/mongo"
 	"github.com/Chipazawra/czwr-mailing-profile/internal/profile"
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -25,10 +26,12 @@ var (
 // @description This is a sample mailing servivce.
 func main() {
 
-	var host, port string
+	var host, port, dbuser, dbpass string
 
 	flag.StringVar(&host, "host", "", "Host on which to start listening")
 	flag.StringVar(&port, "port", "", "Port on which to start listening")
+	flag.StringVar(&dbuser, "dbuser", "", "db user")
+	flag.StringVar(&dbpass, "dbpass", "", "db pass")
 	flag.Parse()
 
 	if host == "" {
@@ -45,6 +48,29 @@ func main() {
 		}
 	}
 
+	if dbuser == "" {
+		dbuser = os.Getenv("DB_USER")
+		if dbuser == "" {
+			panic("db user is not set, use env=\"DB_USER\" or cmd args \"-dbuser\".")
+		}
+	}
+
+	if dbpass == "" {
+		dbpass = os.Getenv("DB_PASS")
+		if dbpass == "" {
+			panic("db pass is not set, use env=\"DB_PASS\" or cmd args \"-dbpass\".")
+		}
+	}
+
+	ctx := context.TODO()
+	//init mongo
+	mClient := mongoctx.New()
+	err := mClient.Connect(ctx, dbuser, dbpass)
+	defer mClient.Disonnect(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	httpEngine := gin.New()
 	httpEngine.Use(gin.Recovery())
 	// log template
@@ -52,7 +78,8 @@ func main() {
 		Formatter: logfmt,
 		Output:    os.Stdout,
 	}))
-	service := profile.New(inmemoryctx.New())
+
+	service := profile.New(mClient)
 	group := service.Register(httpEngine)
 	//profiler
 	pprofrp := pprofwrapper.New()
@@ -60,12 +87,11 @@ func main() {
 	//doc
 	group.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	err := httpEngine.Run(fmt.Sprintf("%v:%v", host, port))
+	err = httpEngine.Run(fmt.Sprintf("%v:%v", host, port))
 
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func logfmt(params gin.LogFormatterParams) string {
