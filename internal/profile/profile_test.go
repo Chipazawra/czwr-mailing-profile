@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	//before test
 	ctx := context.TODO()
 	mClient := mongoctx.New()
-	err := mClient.Connect(ctx, "admin", "admin")
+	err := mClient.Connect(ctx, "admin", "admin", "czwrmongo.yrzjn.mongodb.net")
 	defer mClient.Disonnect(ctx)
 	if err != nil {
 		panic(err)
@@ -30,29 +30,55 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func TestNew(t *testing.T) {
-
-}
-
 func TestReceiversCreate(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*100000))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*100))
 
 	defer func() {
 		if recoveryMessage := recover(); recoveryMessage != nil {
 			fmt.Println(recoveryMessage)
-			cancel()
 		}
+		cancel()
 	}()
 	for i := 0; i < 1000; i++ {
-		if _, err := service.receivers.Create(ctx, fmt.Sprintf("user - %v", i), fmt.Sprintf("receiver - %v", i)); err != nil {
+		if _, err := service.receivers.Create(ctx, fmt.Sprintf("user"), fmt.Sprintf("receiver - %v", i)); err != nil {
 			panic(err)
 		}
 	}
 }
 
+func TestReceiversRead(t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+
+	defer func() {
+		if recoveryMessage := recover(); recoveryMessage != nil {
+			fmt.Println(recoveryMessage)
+		}
+		cancel()
+	}()
+
+	if receivers, err := service.receivers.Read(ctx, "user"); err != nil {
+		panic(err)
+	} else {
+		fmt.Printf("%v\n", receivers)
+	}
+}
+
 func TestUpdate(t *testing.T) {
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+
+	defer func() {
+		if recoveryMessage := recover(); recoveryMessage != nil {
+			fmt.Println(recoveryMessage)
+		}
+		cancel()
+	}()
+
+	if err := service.receivers.Update(ctx, "user", "61783fc030ef8ccf833d7a0d", "noname"); err != nil {
+		panic(err)
+	}
 }
 
 func TestDelete(t *testing.T) {

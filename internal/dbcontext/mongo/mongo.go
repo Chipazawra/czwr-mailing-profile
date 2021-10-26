@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,10 +30,10 @@ func New() *MongoClinet {
 	return &MongoClinet{}
 }
 
-func (mc *MongoClinet) Connect(ctx context.Context, user, pass string) error {
+func (mc *MongoClinet) Connect(ctx context.Context, user, pass, clst string) error {
 	var err error
 	cOpts := options.Client().ApplyURI(
-		fmt.Sprintf("mongodb+srv://%v:%v@czwrmongo.yrzjn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", user, pass),
+		fmt.Sprintf("mongodb+srv://%v:%v@%v/receivers?retryWrites=true&w=majority", user, pass, clst),
 	)
 	mc.client, err = mongo.Connect(ctx, cOpts)
 	return err
@@ -48,11 +49,13 @@ func (mc *MongoClinet) ReceiverCreate(ctx context.Context, usr, receiver string)
 
 	mCollection := mc.client.Database("profile").Collection("receivers")
 
-	res, err := mCollection.InsertOne(ctx, Receiver{
-		ID:   [12]byte{},
-		User: usr,
-		Name: receiver,
-	})
+	res, err := mCollection.InsertOne(ctx,
+		Receiver{
+			ID:   [12]byte{},
+			User: usr,
+			Name: receiver,
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -60,10 +63,51 @@ func (mc *MongoClinet) ReceiverCreate(ctx context.Context, usr, receiver string)
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 func (mc *MongoClinet) ReceiverRead(ctx context.Context, usr string) ([]string, error) {
-	return nil, nil
+
+	mCollection := mc.client.Database("profile").Collection("receivers")
+	res, err := mCollection.Find(ctx,
+		bson.M{"user": usr},
+		options.Find().SetProjection(
+			bson.D{
+				primitive.E{Key: "name", Value: 1},
+				primitive.E{Key: "_id", Value: 1},
+			},
+		),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	var result []string
+	for res.Next(ctx) {
+		result = append(result, res.Current.String())
+	}
+
+	return result, nil
 }
 func (mc *MongoClinet) ReceiverUpdate(ctx context.Context, usr string, id string, receiver string) error {
-	return nil
+	mCollection := mc.client.Database("profile").Collection("receivers")
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	res, err := mCollection.UpdateOne(ctx,
+		bson.D{
+			primitive.E{Key: "_id", Value: objectID},
+			primitive.E{Key: "user", Value: usr},
+		},
+		bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "name", Value: receiver},
+			}},
+		},
+		options.Update().SetUpsert(false),
+	)
+
+	fmt.Printf("%v", res)
+
+	return err
 }
 func (mc *MongoClinet) ReceiverDelete(ctx context.Context, usr string, id string) error {
 	return nil
