@@ -26,7 +26,7 @@ var (
 // @description This is a sample mailing servivce.
 func main() {
 
-	var host, port, dbuser, dbpass string
+	var host, port, dbuser, dbpass, dbclst string
 
 	flag.StringVar(&host, "host", "", "Host on which to start listening")
 	flag.StringVar(&port, "port", "", "Port on which to start listening")
@@ -62,10 +62,17 @@ func main() {
 		}
 	}
 
+	if dbclst == "" {
+		dbclst = os.Getenv("DB_CSLT")
+		if dbclst == "" {
+			panic("db cluser is not set, use env=\"DB_CLST\" or cmd args \"-dbclst\".")
+		}
+	}
+
 	ctx := context.TODO()
 	//init mongo
 	mClient := mongoctx.New()
-	err := mClient.Connect(ctx, dbuser, dbpass)
+	err := mClient.Connect(ctx, dbuser, dbpass, dbclst)
 	defer mClient.Disonnect(ctx)
 	if err != nil {
 		panic(err)
