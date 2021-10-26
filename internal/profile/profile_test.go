@@ -1,84 +1,60 @@
 package profile
 
 import (
+	"context"
+	"fmt"
+	"os"
 	"testing"
+	"time"
 
-	"github.com/Chipazawra/czwr-mailing-profile/internal/dbcontext/inmemoryctx"
+	mongoctx "github.com/Chipazawra/czwr-mailing-profile/internal/dbcontext/mongo"
 )
+
+var (
+	service *Profile
+)
+
+func TestMain(m *testing.M) {
+	//before test
+	ctx := context.TODO()
+	mClient := mongoctx.New()
+	err := mClient.Connect(ctx, "admin", "admin")
+	defer mClient.Disonnect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	service = New(mClient)
+	//run test
+	exitVal := m.Run()
+	//after test
+	os.Exit(exitVal)
+}
 
 func TestNew(t *testing.T) {
 
-	r := New(inmemoryctx.New())
-
-	if r == nil {
-		t.Fatalf("r == nil")
-	}
-
 }
 
-func TestCreate(t *testing.T) {
+func TestReceiversCreate(t *testing.T) {
 
-	r := New(inmemoryctx.New())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*100000))
 
-	idx, err := r.Create("usr", "res1")
-
-	if idx != 0 || err != nil {
-		t.Fatalf("r.Create(\"usr\", \"res1\") = %v, %v, want 0, <nil>", idx, err)
+	defer func() {
+		if recoveryMessage := recover(); recoveryMessage != nil {
+			fmt.Println(recoveryMessage)
+			cancel()
+		}
+	}()
+	for i := 0; i < 1000; i++ {
+		if _, err := service.receivers.Create(ctx, fmt.Sprintf("user - %v", i), fmt.Sprintf("receiver - %v", i)); err != nil {
+			panic(err)
+		}
 	}
-
-	idx, err = r.Create("usr", "res2")
-
-	if idx != 1 || err != nil {
-		t.Fatalf("r.Create(\"usr\", \"res2\") = %v, %v, want 0, <nil>", idx, err)
-	}
-
 }
 
 func TestUpdate(t *testing.T) {
 
-	r := New(inmemoryctx.New())
-
-	err := r.Update("usr", 0, "res1")
-	if err.Error() != "There is no receiver list for user usr" {
-		t.Fatalf("r.Update(\"usr\", 0, \"res1\") = %v, want 'There is no receiver list for user usr'", err)
-	}
-
-	_, err = r.Create("usr", "res1")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	err = r.Update("usr", 0, "res2")
-	if err != nil {
-		t.Fatalf("r.Update(\"usr\", 0, \"res2\")=%v, want <nil>", err)
-	}
-
 }
 
 func TestDelete(t *testing.T) {
-
-	r := New(inmemoryctx.New())
-
-	err := r.Delete("usr", 1)
-
-	if err.Error() != "There is no receiver list for user usr" {
-		t.Fatalf("r.Delete(\"usr\", 1) = %v, want 'There is no receiver list for user usr'", err)
-	}
-
-	_, err = r.Create("usr", "res1")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	err = r.Delete("usr", 1)
-	if err.Error() != "There is no receiver with index 1" {
-		t.Fatalf("r.Delete(\"usr\", 1) = %v, want 'There is no receiver with index 1'", err)
-	}
-
-	err = r.Delete("usr", 0)
-
-	if err != nil {
-		t.Fatalf("r.Delete(\"usr\", 0) = %v, want <nil>", err)
-	}
 
 }
