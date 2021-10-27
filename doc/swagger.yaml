@@ -152,4 +152,17 @@ paths:
       summary: create receiver in receivers list
       tags:
       - profile
+  /profile/upload_template:
+    delete:
+      consumes:
+      - application/json
+      description: upload data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: upload template data
+      tags:
+      - profile
 swagger: "2.0"

@@ -246,6 +246,26 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/profile/upload_template": {
+            "delete": {
+                "description": "upload data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "upload template data",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
         }
     }
 }`

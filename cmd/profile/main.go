@@ -63,7 +63,7 @@ func main() {
 	}
 
 	if dbclst == "" {
-		dbclst = os.Getenv("DB_CSLT")
+		dbclst = os.Getenv("DB_CLST")
 		if dbclst == "" {
 			panic("db cluser is not set, use env=\"DB_CLST\" or cmd args \"-dbclst\".")
 		}

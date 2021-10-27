@@ -65,7 +65,7 @@ func TestReceiversRead(t *testing.T) {
 	}
 }
 
-func TestUpdate(t *testing.T) {
+func TestReceiversUpdate(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 
@@ -76,11 +76,44 @@ func TestUpdate(t *testing.T) {
 		cancel()
 	}()
 
-	if err := service.receivers.Update(ctx, "user", "61783fc030ef8ccf833d7a0d", "noname"); err != nil {
+	if err := service.receivers.Update(ctx, "61783fc030ef8ccf833d7a0d", "noname"); err != nil {
 		panic(err)
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestReceiversDelete(t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+
+	defer func() {
+		if recoveryMessage := recover(); recoveryMessage != nil {
+			fmt.Println(recoveryMessage)
+		}
+		cancel()
+	}()
+
+	if err := service.receivers.Delete(ctx, "user", "61783fc030ef8ccf833d7a0d"); err != nil {
+		panic(err)
+	}
+}
+
+func TestTemplateCreate(t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+
+	defer func() {
+		if recoveryMessage := recover(); recoveryMessage != nil {
+			fmt.Println(recoveryMessage)
+		}
+		cancel()
+	}()
+
+	if _, err := service.template.Create(ctx, "<div><h1>{{ .Title}}</h1><p>{{ .Message}}</p></div>"); err != nil {
+		panic(err)
+	}
+
+	if _, err := service.template.Create(ctx, "<div><h1></h1><p></p></div>"); err != nil {
+		panic(err)
+	}
 
 }

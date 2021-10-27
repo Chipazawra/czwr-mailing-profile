@@ -2,6 +2,8 @@ package profile
 
 import (
 	"context"
+	"html/template"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +29,7 @@ func (p *Profile) Register(g *gin.Engine) *gin.RouterGroup {
 	reciviers := profile.Group("/reciviers")
 	reciviers.POST("/:usr/:receiver", p.CreateHandler)
 	reciviers.GET("/:usr", p.ReadHandler)
-	reciviers.PATCH("/:usr/:id/:receiver", p.UpdateHandler)
+	reciviers.PATCH("/:id/:receiver", p.UpdateHandler)
 	reciviers.DELETE("/:usr/:id", p.DeleteHandler)
 	reciviers.POST("/upload_template", p.UploadTemplateHandler)
 
@@ -37,9 +39,9 @@ func (p *Profile) Register(g *gin.Engine) *gin.RouterGroup {
 type IDBctx interface {
 	ReceiverCreate(ctx context.Context, usr, receiver string) (string, error)
 	ReceiverRead(ctx context.Context, usr string) ([]string, error)
-	ReceiverUpdate(ctx context.Context, usr string, id string, receiver string) error
+	ReceiverUpdate(ctx context.Context, id string, receiver string) error
 	ReceiverDelete(ctx context.Context, usr string, id string) error
-	TemplateCreate(ctx context.Context, raw string, params []string) error
+	TemplateCreate(ctx context.Context, raw string, params []string) (string, error)
 }
 
 type ReceiversStorage struct {
@@ -64,9 +66,9 @@ func (r *ReceiversStorage) Read(ctx context.Context, usr string) ([]string, erro
 	return lst, nil
 }
 
-func (r *ReceiversStorage) Update(ctx context.Context, usr string, id string, receiver string) error {
+func (r *ReceiversStorage) Update(ctx context.Context, id string, receiver string) error {
 
-	err := r.dbCtx.ReceiverUpdate(ctx, usr, id, receiver)
+	err := r.dbCtx.ReceiverUpdate(ctx, id, receiver)
 	if err != nil {
 		return err
 	}
@@ -86,6 +88,24 @@ type TemplatesStorage struct {
 	dbCtx IDBctx
 }
 
-func (t *TemplatesStorage) Create(ctx context.Context, raw string, params []string) {
-	t.dbCtx.TemplateCreate(ctx, raw, params)
+func (t *TemplatesStorage) Create(ctx context.Context, raw string) ([]string, error) {
+
+	tmpl := template.New("tmpl")
+	_, err := tmpl.Parse(string(raw))
+
+	if err != nil {
+		return nil, err
+	}
+
+	rx, _ := regexp.Compile(`{{ \.(.*?)}}`)
+	params := func(p []string) []string {
+		for _, v := range rx.FindAllStringSubmatch(string(raw), -1) {
+			p = append(p, v[1])
+		}
+		return p
+	}(make([]string, 0))
+
+	_, err = t.dbCtx.TemplateCreate(ctx, raw, params)
+
+	return params, err
 }
