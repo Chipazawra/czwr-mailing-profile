@@ -2,9 +2,7 @@ package profile
 
 import (
 	"context"
-	"html/template"
 	"net/http"
-	"regexp"
 
 	"github.com/Chipazawra/czwr-mailing-auth/pkg/jwtmng"
 	"github.com/dgrijalva/jwt-go"
@@ -126,10 +124,9 @@ func (p *Profile) ReadHandler(c *gin.Context) {
 // @Router /profile/reciviers/{usr}/{id}/{receiver} [patch]
 func (r *Profile) UpdateHandler(c *gin.Context) {
 
-	usr := c.Param("usr")
 	receiver := c.Param("receiver")
 	id := c.Param("id")
-	err := r.receivers.Update(context.TODO(), usr, id, receiver)
+	err := r.receivers.Update(context.TODO(), id, receiver)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -190,21 +187,13 @@ func (r *Profile) UploadTemplateHandler(c *gin.Context) {
 		return
 	}
 
-	tmpl := template.New("tmpl")
-
-	_, err = tmpl.Parse(string(raw))
-
-	if err != nil {
+	if res, err := r.template.Create(context.TODO(), string(raw)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": err.Error(),
 		})
 		return
+	} else {
+		c.JSON(http.StatusOK, res)
 	}
 
-	rx, _ := regexp.Compile(`{{ \.(.*?)}}`)
-	as := rx.FindAllStringSubmatch(string(raw), -1)
-
-	r.template.Create(context.TODO(), string(raw), []string{})
-
-	c.JSON(http.StatusOK, as)
 }

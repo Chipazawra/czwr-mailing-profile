@@ -46,9 +46,7 @@ func (mc *MongoClinet) Disonnect(ctx context.Context) {
 }
 
 func (mc *MongoClinet) ReceiverCreate(ctx context.Context, usr, receiver string) (string, error) {
-
 	mCollection := mc.client.Database("profile").Collection("receivers")
-
 	res, err := mCollection.InsertOne(ctx,
 		Receiver{
 			ID:   [12]byte{},
@@ -63,7 +61,6 @@ func (mc *MongoClinet) ReceiverCreate(ctx context.Context, usr, receiver string)
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 func (mc *MongoClinet) ReceiverRead(ctx context.Context, usr string) ([]string, error) {
-
 	mCollection := mc.client.Database("profile").Collection("receivers")
 	res, err := mCollection.Find(ctx,
 		bson.M{"user": usr},
@@ -85,17 +82,16 @@ func (mc *MongoClinet) ReceiverRead(ctx context.Context, usr string) ([]string, 
 
 	return result, nil
 }
-func (mc *MongoClinet) ReceiverUpdate(ctx context.Context, usr string, id string, receiver string) error {
+func (mc *MongoClinet) ReceiverUpdate(ctx context.Context, id string, receiver string) error {
 	mCollection := mc.client.Database("profile").Collection("receivers")
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	res, err := mCollection.UpdateOne(ctx,
+	_, err = mCollection.UpdateOne(ctx,
 		bson.D{
 			primitive.E{Key: "_id", Value: objectID},
-			primitive.E{Key: "user", Value: usr},
 		},
 		bson.D{
 			primitive.E{Key: "$set", Value: bson.D{
@@ -105,13 +101,37 @@ func (mc *MongoClinet) ReceiverUpdate(ctx context.Context, usr string, id string
 		options.Update().SetUpsert(false),
 	)
 
-	fmt.Printf("%v", res)
-
 	return err
 }
 func (mc *MongoClinet) ReceiverDelete(ctx context.Context, usr string, id string) error {
-	return nil
+
+	mCollection := mc.client.Database("profile").Collection("receivers")
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = mCollection.DeleteOne(ctx,
+		bson.D{
+			primitive.E{Key: "_id", Value: objectID},
+			primitive.E{Key: "user", Value: usr},
+		},
+	)
+
+	return err
+
 }
-func (mc *MongoClinet) TemplateCreate(ctx context.Context, raw string, params []string) error {
-	return nil
+func (mc *MongoClinet) TemplateCreate(ctx context.Context, raw string, params []string) (string, error) {
+	mCollection := mc.client.Database("profile").Collection("templates")
+	res, err := mCollection.InsertOne(ctx,
+		Template{
+			ID:     [12]byte{},
+			Raw:    raw,
+			Params: params,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return res.InsertedID.(primitive.ObjectID).Hex(), nil
 }
