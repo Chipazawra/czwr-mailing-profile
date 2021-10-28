@@ -3,20 +3,24 @@ package profile
 import (
 	"context"
 	"html/template"
+	"net/http"
 	"regexp"
 
+	"github.com/Chipazawra/czwr-mailing-auth/pkg/jwtmng"
+	"github.com/Chipazawra/czwr-mailing-profile/internal/datastore"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
 type Profile struct {
-	receivers *ReceiversStorage
-	template  *TemplatesStorage
+	receivers *datastore.Receivers
+	templates *datastore.Templates
 }
 
-func New(dbCtx IDBctx) *Profile {
+func New(receivers *datastore.Receivers, templates *datastore.Templates) *Profile {
 	return &Profile{
-		&ReceiversStorage{dbCtx: dbCtx},
-		&TemplatesStorage{dbCtx: dbCtx},
+		receivers,
+		templates,
 	}
 }
 
@@ -34,58 +38,6 @@ func (p *Profile) Register(g *gin.Engine) *gin.RouterGroup {
 	reciviers.POST("/upload_template", p.UploadTemplateHandler)
 
 	return profile
-}
-
-type IDBctx interface {
-	ReceiverCreate(ctx context.Context, usr, receiver string) (string, error)
-	ReceiverRead(ctx context.Context, usr string) ([]string, error)
-	ReceiverUpdate(ctx context.Context, id string, receiver string) error
-	ReceiverDelete(ctx context.Context, usr string, id string) error
-	TemplateCreate(ctx context.Context, raw string, params []string) (string, error)
-}
-
-type ReceiversStorage struct {
-	dbCtx IDBctx
-}
-
-func (r *ReceiversStorage) Create(ctx context.Context, usr, receiver string) (string, error) {
-
-	id, err := r.dbCtx.ReceiverCreate(ctx, usr, receiver)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
-func (r *ReceiversStorage) Read(ctx context.Context, usr string) ([]string, error) {
-
-	lst, err := r.dbCtx.ReceiverRead(ctx, usr)
-	if err != nil {
-		return nil, err
-	}
-	return lst, nil
-}
-
-func (r *ReceiversStorage) Update(ctx context.Context, id string, receiver string) error {
-
-	err := r.dbCtx.ReceiverUpdate(ctx, id, receiver)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *ReceiversStorage) Delete(ctx context.Context, usr string, id string) error {
-
-	err := r.dbCtx.ReceiverDelete(ctx, usr, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type TemplatesStorage struct {
-	dbCtx IDBctx
 }
 
 func (t *TemplatesStorage) Create(ctx context.Context, raw string) ([]string, error) {
@@ -108,4 +60,193 @@ func (t *TemplatesStorage) Create(ctx context.Context, raw string) ([]string, er
 	_, err = t.dbCtx.TemplateCreate(ctx, raw, params)
 
 	return params, err
+}
+
+func (p *Profile) pHandler(c *gin.Context, fn func(val string) (jwt.Claims, error)) {
+
+	ac, err := c.Request.Cookie("access")
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "access token not found.",
+		})
+		return
+	}
+
+	data, err := fn(ac.Value)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "invalid token",
+		})
+		return
+	} else {
+		c.JSON(http.StatusOK, data)
+	}
+}
+
+// profile i godoc
+// @Summary show user info
+// @Tags profile
+// @Description get auth data
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Router /profile/i [get]
+func (p *Profile) iHandler(c *gin.Context) {
+	p.pHandler(c, jwtmng.ParseToken)
+}
+
+// profile me godoc
+// @Summary valid jwt token and show user info
+// @Tags profile
+// @Description get auth data
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Router /profile/me [get]
+func (p *Profile) meHandler(c *gin.Context) {
+	p.pHandler(c, jwtmng.ValidToken)
+}
+
+// profile receivers godoc
+// @Summary create receiver in receivers list
+// @Tags profile
+// @Description create receiver
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Param usr string query string true "USR"
+// @Param receiver string query string true "RECEIVER"
+// @Router /profile/reciviers/{usr}/{receiver} [post]
+func (p *Profile) CreateHandler(c *gin.Context) {
+
+	usr := c.Param("usr")
+	receiver := c.Param("receiver")
+	id, err := p.receivers.Create(context.TODO(), usr, receiver)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id": id,
+	})
+}
+
+// profile receivers godoc
+// @Summary get receivers list
+// @Tags profile
+// @Description get receivers
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Param usr string query string true "USR"
+// @Router /profile/reciviers/{usr} [get]
+func (p *Profile) ReadHandler(c *gin.Context) {
+
+	usr := c.Param("usr")
+
+	receivers, err := p.receivers.Read(context.TODO(), usr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"receivers": receivers,
+	})
+}
+
+// profile receivers godoc
+// @Summary update receiver in receiver list
+// @Tags profile
+// @Description update receiver
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Param usr string query string true "USR"
+// @Param id path int true "ID"
+// @Param receiver string query string true "RECEIVER"
+// @Router /profile/reciviers/{usr}/{id}/{receiver} [patch]
+func (r *Profile) UpdateHandler(c *gin.Context) {
+
+	receiver := c.Param("receiver")
+	id := c.Param("id")
+	err := r.receivers.Update(context.TODO(), id, receiver)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "updated",
+	})
+}
+
+// profile receivers godoc
+// @Summary delete receiver from receiver list
+// @Tags profile
+// @Description delete receiver
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Param usr string query string true "USR"
+// @Param receiver string query string true "RECEIVER"
+// @Router /profile/reciviers/{usr}/{id} [delete]
+func (r *Profile) DeleteHandler(c *gin.Context) {
+
+	usr := c.Param("usr")
+	id := c.Param("id")
+	err := r.receivers.Delete(context.TODO(), usr, id)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "deleted",
+	})
+}
+
+// profile receivers godoc
+// @Summary upload template data
+// @Tags profile
+// @Description upload data
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Router /profile/upload_template [delete]
+func (r *Profile) UploadTemplateHandler(c *gin.Context) {
+
+	raw, err := c.GetRawData()
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	}
+
+	if res, err := r.template.Create(context.TODO(), string(raw)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": err.Error(),
+		})
+		return
+	} else {
+		c.JSON(http.StatusOK, res)
+	}
+
 }
