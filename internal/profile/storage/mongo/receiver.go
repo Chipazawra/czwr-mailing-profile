@@ -14,19 +14,22 @@ type Receivers struct {
 	mClient *mongo.Client
 }
 
+type mReceiver struct {
+	ID   primitive.ObjectID `bson:"_id,omitempty"`
+	User string             `bson:"user"`
+	Name string             `bson:"name"`
+}
+
 func NewReceivers(mClient *mongo.Client) *Receivers {
 	return &Receivers{mClient: mClient}
 }
 
+//					Create(ctx context.Context, receiver *Receiver) (string, error)
 func (r *Receivers) Create(ctx context.Context, receiver *model.Receiver) (string, error) {
 
 	mCollection := r.mClient.Database("profile").Collection("receivers")
 	res, err := mCollection.InsertOne(ctx,
-		struct {
-			ID   primitive.ObjectID `bson:"_id,omitempty"`
-			User string             `bson:"user"`
-			Name string             `bson:"name"`
-		}{
+		&mReceiver{
 			ID:   [12]byte{},
 			User: receiver.User,
 			Name: receiver.Name,
@@ -39,14 +42,17 @@ func (r *Receivers) Create(ctx context.Context, receiver *model.Receiver) (strin
 
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
 }
-func (r *Receivers) Read(ctx context.Context, usr string) ([]model.Receiver, error) {
+
+//					Read(ctx context.Context, usr string) ([]*Receiver, error)
+func (r *Receivers) Read(ctx context.Context, usr string) ([]*model.Receiver, error) {
 	mCollection := r.mClient.Database("profile").Collection("receivers")
 	res, err := mCollection.Find(ctx,
 		bson.M{"user": usr},
 		options.Find().SetProjection(
 			bson.D{
-				primitive.E{Key: "name", Value: 1},
 				primitive.E{Key: "_id", Value: 1},
+				primitive.E{Key: "name", Value: 1},
+				primitive.E{Key: "user", Value: 1},
 			},
 		),
 	)
@@ -54,14 +60,26 @@ func (r *Receivers) Read(ctx context.Context, usr string) ([]model.Receiver, err
 		panic(err)
 	}
 
-	var result []string
+	var result []*model.Receiver
 	for res.Next(ctx) {
-		result = append(result, res.Current.String())
+		var mReceiver mReceiver
+		err = res.Decode(&mReceiver)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, func() *model.Receiver {
+			return &model.Receiver{
+				ID:   mReceiver.ID.Hex(),
+				User: mReceiver.User,
+				Name: mReceiver.Name,
+			}
+		}())
 	}
 
-	return nil, nil
-
+	return result, nil
 }
+
+//					Update(ctx context.Context, receiver *Receiver) error
 func (r *Receivers) Update(ctx context.Context, receiver *model.Receiver) error {
 	mCollection := r.mClient.Database("profile").Collection("receivers")
 	objectID, err := primitive.ObjectIDFromHex(receiver.ID)
@@ -84,6 +102,8 @@ func (r *Receivers) Update(ctx context.Context, receiver *model.Receiver) error 
 
 	return err
 }
+
+//					Delete(ctx context.Context, id string) error
 func (r *Receivers) Delete(ctx context.Context, id string) error {
 
 	mCollection := r.mClient.Database("profile").Collection("receivers")
