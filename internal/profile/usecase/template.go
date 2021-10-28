@@ -7,10 +7,10 @@ import (
 )
 
 type Templates struct {
-	templates *model.ITemplatesStorage
+	templates model.ITemplatesStorage
 }
 
-func NewTemplates(it *model.ITemplatesStorage) *Templates {
+func NewTemplates(it model.ITemplatesStorage) *Templates {
 	return &Templates{
 		templates: it,
 	}

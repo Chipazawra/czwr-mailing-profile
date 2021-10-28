@@ -1,4 +1,4 @@
-package mongoclient
+package mongodriver
 
 import (
 	"context"
@@ -8,25 +8,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Client struct {
+type Driver struct {
 	client *mongo.Client
 }
 
-func New() *Client {
-	return &Client{}
+func New() *Driver {
+	return &Driver{}
 }
 
-func (mc *Client) Connect(ctx context.Context, user, pass, clst string) error {
+func (dr *Driver) Client() *mongo.Client {
+	return dr.client
+}
+
+func (dr *Driver) Connect(ctx context.Context, user, pass, clst string) error {
 	var err error
 	cOpts := options.Client().ApplyURI(
 		fmt.Sprintf("mongodb+srv://%v:%v@%v/receivers?retryWrites=true&w=majority", user, pass, clst),
 	)
-	mc.client, err = mongo.Connect(ctx, cOpts)
+	dr.client, err = mongo.Connect(ctx, cOpts)
 	return err
 }
 
-func (mc *Client) Disonnect(ctx context.Context) {
-	if err := mc.client.Disconnect(ctx); err != nil {
+func (dr *Driver) Disonnect(ctx context.Context) {
+	if err := dr.client.Disconnect(ctx); err != nil {
 		panic(err)
 	}
 }

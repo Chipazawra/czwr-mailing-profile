@@ -7,24 +7,39 @@ import (
 )
 
 type Receivers struct {
-	receivers *model.IReceiverStorage
+	storage model.IReceiverStorage
 }
 
-func NewReceivers(ir *model.IReceiverStorage) *Receivers {
+func NewReceivers(ir model.IReceiverStorage) *Receivers {
 	return &Receivers{
-		receivers: ir,
+		storage: ir,
 	}
 }
 
-func (p *Receivers) Create(ctx context.Context, user, name string) (*model.Receiver, error) {
+func (r *Receivers) Create(ctx context.Context, user, name string) (*model.Receiver, error) {
+
+	new := &model.Receiver{
+		ID:   "",
+		User: user,
+		Name: name,
+	}
+
+	var err error
+
+	new.ID, err = r.storage.Create(ctx, new)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return new, err
+}
+func (r *Receivers) Read(ctx context.Context, user string) ([]*model.Receiver, error) {
 	return nil, nil
 }
-func (p *Receivers) Read(ctx context.Context, user string) ([]model.Receiver, error) {
+func (r *Receivers) Update(ctx context.Context, id, user, name string) (*model.Receiver, error) {
 	return nil, nil
 }
-func (p *Receivers) Update(ctx context.Context, id, user, name string) (*model.Receiver, error) {
-	return nil, nil
-}
-func (p *Receivers) Delete(ctx context.Context, id string) error {
+func (r *Receivers) Delete(ctx context.Context, id string) error {
 	return nil
 }
