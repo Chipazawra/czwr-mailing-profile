@@ -80,10 +80,9 @@ func TestReceiverRead(t *testing.T) {
 		t.Errorf("Err = %v", err)
 	}
 
-	expexcted := "TestReceiverRead_receiver"
-	res, err := rStorage.Read(ctx, rcvr.User)
-	if res[0].Name != expexcted || err != nil {
-		t.Errorf("res[0].Name  = %v; want %v; err = %v", res[0].Name, expexcted, err)
+	_, err = rStorage.Read(ctx, rcvr.User)
+	if err != nil {
+		t.Errorf("err = %v", err)
 	}
 
 }
