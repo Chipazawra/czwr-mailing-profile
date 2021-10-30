@@ -4,15 +4,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
 	"github.com/Chipazawra/czwr-mailing-auth/pkg/pprofwrapper"
 	_ "github.com/Chipazawra/czwr-mailing-profile/doc"
-	mongoctx "github.com/Chipazawra/czwr-mailing-profile/internal/dbcontext/mongo"
-	"github.com/Chipazawra/czwr-mailing-profile/internal/profile"
+	mongodriver "github.com/Chipazawra/czwr-mailing-profile/internal/drivers/mongo"
+	httpHandler "github.com/Chipazawra/czwr-mailing-profile/internal/profile/handlers/http"
+	mongostorage "github.com/Chipazawra/czwr-mailing-profile/internal/profile/storage/mongo"
+	usecases "github.com/Chipazawra/czwr-mailing-profile/internal/profile/usecase"
 	"github.com/gin-gonic/gin"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
@@ -71,13 +73,22 @@ func main() {
 
 	ctx := context.TODO()
 	//init mongo
-	mClient := mongoctx.New()
+	mClient := mongodriver.New()
 	err := mClient.Connect(ctx, dbuser, dbpass, dbclst)
 	defer mClient.Disonnect(ctx)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
+	receiversStorage := mongostorage.NewReceivers(mClient.Client())
+	templatesStorage := mongostorage.NewTemplates(mClient.Client())
+	receiversUserCases := usecases.NewReceivers(receiversStorage)
+	templatesUserCases := usecases.NewTemplates(templatesStorage)
+	receiversHTTPHandler := httpHandler.NewReceiverHandler(receiversUserCases)
+	templatesHTTPHandler := httpHandler.NewTemplateHandler(templatesUserCases)
+	profileHTTPHandler := httpHandler.NewProfile()
+
+	//init httpEngine
 	httpEngine := gin.New()
 	httpEngine.Use(gin.Recovery())
 	// log template
@@ -86,13 +97,15 @@ func main() {
 		Output:    os.Stdout,
 	}))
 
-	service := profile.New(mClient)
-	group := service.Register(httpEngine)
+	root := profileHTTPHandler.Register(httpEngine)
+	receiversHTTPHandler.Register(root)
+	templatesHTTPHandler.Register(root)
+
 	//profiler
 	pprofrp := pprofwrapper.New()
-	pprofrp.Register(group)
+	pprofrp.Register(root)
 	//doc
-	group.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	root.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	err = httpEngine.Run(fmt.Sprintf("%v:%v", host, port))
 
@@ -125,3 +138,14 @@ func logfmt(params gin.LogFormatterParams) string {
 		params.ErrorMessage,
 	)
 }
+
+// func initParam(param *string, env string, arg string, defaultval string) {
+// 	if &param == "" {
+// 		param = os.Getenv(env)
+// 		if param == "" && defaultval != "" {
+// 			param = defaultval
+// 		} else if param == "" {
+// 			panic(fmt.Errorf("db cluser is not set, use env=\"%v\" or cmd args \"-%v\".", env, arg))
+// 		}
+// 	}
+// }

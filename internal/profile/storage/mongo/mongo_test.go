@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	mongodriver "github.com/Chipazawra/czwr-mailing-profile/internal/profile/drivers/mongo"
+	mongodriver "github.com/Chipazawra/czwr-mailing-profile/internal/drivers/mongo"
 	"github.com/Chipazawra/czwr-mailing-profile/internal/profile/model"
 )
 
@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 
 func TestTemplatesCreate(t *testing.T) {
 
-	cxt := context.TODO()
+	ctx := context.TODO()
 
 	tmpl := &model.Template{
 		ID:     "",
@@ -45,8 +45,8 @@ func TestTemplatesCreate(t *testing.T) {
 		Params: []string{"Title"},
 	}
 
-	if err := tStorage.Create(cxt, tmpl); err != nil {
-		panic(err)
+	if _, err := tStorage.Create(ctx, tmpl); err != nil {
+		t.Errorf("Err = %v", err)
 	}
 
 }
@@ -61,7 +61,7 @@ func TestReceiverCreate(t *testing.T) {
 	}
 
 	if id, err := rStorage.Create(ctx, rcvr); err != nil {
-		panic(err)
+		t.Errorf("Err = %v", err)
 	} else {
 		log.Printf("id = %v\n", id)
 	}
@@ -77,7 +77,7 @@ func TestReceiverRead(t *testing.T) {
 
 	_, err := rStorage.Create(ctx, rcvr)
 	if err != nil {
-		panic(err)
+		t.Errorf("Err = %v", err)
 	}
 
 	expexcted := "TestReceiverRead_recivier"
@@ -122,7 +122,7 @@ func TestReceiverDelete(t *testing.T) {
 
 	id, err := rStorage.Create(ctx, rcvr)
 	if err != nil {
-		panic(err)
+		t.Errorf("Err = %v", err)
 	}
 
 	err = rStorage.Delete(ctx, id)

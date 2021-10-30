@@ -15,5 +15,5 @@ type ITemplatesUserCase interface {
 }
 
 type ITemplatesStorage interface {
-	Create(ctx context.Context, template *Template) error
+	Create(ctx context.Context, template *Template) (string, error)
 }
