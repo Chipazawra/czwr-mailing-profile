@@ -15,6 +15,7 @@ import (
 	mongostorage "github.com/Chipazawra/czwr-mailing-profile/internal/profile/storage/mongo"
 	usecases "github.com/Chipazawra/czwr-mailing-profile/internal/profile/usecase"
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
@@ -34,6 +35,7 @@ func main() {
 	flag.StringVar(&port, "port", "", "Port on which to start listening")
 	flag.StringVar(&dbuser, "dbuser", "", "db user")
 	flag.StringVar(&dbpass, "dbpass", "", "db pass")
+	flag.StringVar(&dbclst, "dbclst", "", "db cluster")
 	flag.Parse()
 
 	if host == "" {
@@ -80,6 +82,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//init app
 	receiversStorage := mongostorage.NewReceivers(mClient.Client())
 	templatesStorage := mongostorage.NewTemplates(mClient.Client())
 	receiversUserCases := usecases.NewReceivers(receiversStorage)
@@ -97,6 +100,7 @@ func main() {
 		Output:    os.Stdout,
 	}))
 
+	// register handlers
 	root := profileHTTPHandler.Register(httpEngine)
 	receiversHTTPHandler.Register(root)
 	templatesHTTPHandler.Register(root)

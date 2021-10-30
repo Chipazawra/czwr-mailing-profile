@@ -36,7 +36,7 @@ func (rh *ReceiverHandler) Register(g *gin.RouterGroup) *gin.RouterGroup {
 // @Success 200
 // @Param usr string query string true "USR"
 // @Param receiver string query string true "RECEIVER"
-// @Router /profile/reciviers/{usr}/{receiver} [post]
+// @Router /profile/receivers/{usr}/{receiver} [post]
 func (rh *ReceiverHandler) CreateHandler(c *gin.Context) {
 
 	usr := c.Param("usr")
@@ -63,7 +63,7 @@ func (rh *ReceiverHandler) CreateHandler(c *gin.Context) {
 // @Produce  json
 // @Success 200
 // @Param usr string query string true "USR"
-// @Router /profile/reciviers/{usr} [get]
+// @Router /profile/receivers/{usr} [get]
 func (rh *ReceiverHandler) ReadHandler(c *gin.Context) {
 
 	usr := c.Param("usr")
@@ -92,7 +92,7 @@ func (rh *ReceiverHandler) ReadHandler(c *gin.Context) {
 // @Param usr string query string true "USR"
 // @Param id path int true "ID"
 // @Param receiver string query string true "RECEIVER"
-// @Router /profile/reciviers/{usr}/{id}/{receiver} [patch]
+// @Router /profile/receivers/{usr}/{id}/{receiver} [patch]
 func (rh *ReceiverHandler) UpdateHandler(c *gin.Context) {
 
 	id := c.Param("id")
@@ -122,7 +122,7 @@ func (rh *ReceiverHandler) UpdateHandler(c *gin.Context) {
 // @Success 200
 // @Param usr string query string true "USR"
 // @Param receiver string query string true "RECEIVER"
-// @Router /profile/reciviers/{id} [delete]
+// @Router /profile/receivers/{id} [delete]
 func (rh *ReceiverHandler) DeleteHandler(c *gin.Context) {
 
 	id := c.Param("id")
