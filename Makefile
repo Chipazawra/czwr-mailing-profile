@@ -7,8 +7,7 @@ DB_PASS=admin
 DB_CLST=czwrmongo.yrzjn.mongodb.net
 
 test:
-	go test ./internal/dbcontext/inmemoryctx/ -v
-	go test ./internal/profile/ -v
+	go test ./... -v
 
 swag:
 	swag init -d ./cmd/${SVC_NAME}/ -o ./doc -g main.go --parseDependency
