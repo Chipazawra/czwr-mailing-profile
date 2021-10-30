@@ -57,7 +57,7 @@ func TestReceiverCreate(t *testing.T) {
 	rcvr := &model.Receiver{
 		ID:   "",
 		User: "usr",
-		Name: "TestReceiverCreate_recivier",
+		Name: "TestReceiverCreate_receiver",
 	}
 
 	if id, err := rStorage.Create(ctx, rcvr); err != nil {
@@ -72,7 +72,7 @@ func TestReceiverRead(t *testing.T) {
 	ctx := context.TODO()
 	rcvr := &model.Receiver{
 		User: "usr",
-		Name: "TestReceiverRead_recivier",
+		Name: "TestReceiverRead_receiver",
 	}
 
 	_, err := rStorage.Create(ctx, rcvr)
@@ -80,7 +80,7 @@ func TestReceiverRead(t *testing.T) {
 		t.Errorf("Err = %v", err)
 	}
 
-	expexcted := "TestReceiverRead_recivier"
+	expexcted := "TestReceiverRead_receiver"
 	res, err := rStorage.Read(ctx, rcvr.User)
 	if res[0].Name != expexcted || err != nil {
 		t.Errorf("res[0].Name  = %v; want %v; err = %v", res[0].Name, expexcted, err)
@@ -92,7 +92,7 @@ func TestReceiverUpdate(t *testing.T) {
 	ctx := context.TODO()
 	rcvr := &model.Receiver{
 		User: "usr",
-		Name: "TestReceiverUpdate_recivier",
+		Name: "TestReceiverUpdate_receiver",
 	}
 
 	id, err := rStorage.Create(ctx, rcvr)
@@ -103,7 +103,7 @@ func TestReceiverUpdate(t *testing.T) {
 	rcvrupd := &model.Receiver{
 		ID:   id,
 		User: "usr",
-		Name: "TestReceiverUpdate_recivier_TestReceiverUpdate_recivier",
+		Name: "TestReceiverUpdate_receiver_TestReceiverUpdate_receiver",
 	}
 
 	err = rStorage.Update(ctx, rcvrupd)
@@ -117,7 +117,7 @@ func TestReceiverDelete(t *testing.T) {
 	ctx := context.TODO()
 	rcvr := &model.Receiver{
 		User: "usr",
-		Name: "TestReceiverDelete_recivier",
+		Name: "TestReceiverDelete_receiver",
 	}
 
 	id, err := rStorage.Create(ctx, rcvr)

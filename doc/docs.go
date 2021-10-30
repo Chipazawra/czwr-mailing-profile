@@ -103,36 +103,7 @@ var doc = `{
                 }
             }
         },
-        "/profile/reciviers/{usr}": {
-            "get": {
-                "description": "get receivers",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "profile"
-                ],
-                "summary": "get receivers list",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "USR",
-                        "name": "string",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/profile/reciviers/{usr}/{id}": {
+        "/profile/receivers/{id}": {
             "delete": {
                 "description": "delete receiver",
                 "consumes": [
@@ -168,7 +139,36 @@ var doc = `{
                 }
             }
         },
-        "/profile/reciviers/{usr}/{id}/{receiver}": {
+        "/profile/receivers/{usr}": {
+            "get": {
+                "description": "get receivers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "get receivers list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "USR",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/profile/receivers/{usr}/{id}/{receiver}": {
             "patch": {
                 "description": "update receiver",
                 "consumes": [
@@ -211,7 +211,7 @@ var doc = `{
                 }
             }
         },
-        "/profile/reciviers/{usr}/{receiver}": {
+        "/profile/receivers/{usr}/{receiver}": {
             "post": {
                 "description": "create receiver",
                 "consumes": [
@@ -321,5 +321,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }
