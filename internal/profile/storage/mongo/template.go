@@ -16,10 +16,10 @@ func NewTemplates(mClient *mongo.Client) *Templates {
 	return &Templates{mClient: mClient}
 }
 
-func (t *Templates) Create(ctx context.Context, template *model.Template) error {
+func (t *Templates) Create(ctx context.Context, template *model.Template) (string, error) {
 
 	mCollection := t.mClient.Database("profile").Collection("templates")
-	_, err := mCollection.InsertOne(ctx,
+	res, err := mCollection.InsertOne(ctx,
 		struct {
 			ID     primitive.ObjectID `bson:"_id,omitempty"`
 			Raw    string             `bson:"raw"`
@@ -31,5 +31,5 @@ func (t *Templates) Create(ctx context.Context, template *model.Template) error 
 		},
 	)
 
-	return err
+	return res.InsertedID.(primitive.ObjectID).Hex(), err
 }

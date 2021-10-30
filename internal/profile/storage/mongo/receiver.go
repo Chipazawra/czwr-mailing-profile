@@ -2,6 +2,7 @@ package mongostorage
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Chipazawra/czwr-mailing-profile/internal/profile/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,7 +25,6 @@ func NewReceivers(mClient *mongo.Client) *Receivers {
 	return &Receivers{mClient: mClient}
 }
 
-//					Create(ctx context.Context, receiver *Receiver) (string, error)
 func (r *Receivers) Create(ctx context.Context, receiver *model.Receiver) (string, error) {
 
 	mCollection := r.mClient.Database("profile").Collection("receivers")
@@ -37,13 +37,12 @@ func (r *Receivers) Create(ctx context.Context, receiver *model.Receiver) (strin
 	)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("mongostorage Receivers:%v", err)
 	}
 
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-//					Read(ctx context.Context, usr string) ([]*Receiver, error)
 func (r *Receivers) Read(ctx context.Context, usr string) ([]*model.Receiver, error) {
 	mCollection := r.mClient.Database("profile").Collection("receivers")
 	res, err := mCollection.Find(ctx,
@@ -57,7 +56,7 @@ func (r *Receivers) Read(ctx context.Context, usr string) ([]*model.Receiver, er
 		),
 	)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("mongostorage Receivers:%v", err)
 	}
 
 	var result []*model.Receiver
@@ -65,7 +64,7 @@ func (r *Receivers) Read(ctx context.Context, usr string) ([]*model.Receiver, er
 		var mReceiver mReceiver
 		err = res.Decode(&mReceiver)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("mongostorage Receivers:%v", err)
 		}
 		result = append(result, func() *model.Receiver {
 			return &model.Receiver{
@@ -79,12 +78,11 @@ func (r *Receivers) Read(ctx context.Context, usr string) ([]*model.Receiver, er
 	return result, nil
 }
 
-//					Update(ctx context.Context, receiver *Receiver) error
 func (r *Receivers) Update(ctx context.Context, receiver *model.Receiver) error {
 	mCollection := r.mClient.Database("profile").Collection("receivers")
 	objectID, err := primitive.ObjectIDFromHex(receiver.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("mongostorage Receivers:%v", err)
 	}
 
 	_, err = mCollection.UpdateOne(ctx,
@@ -100,16 +98,19 @@ func (r *Receivers) Update(ctx context.Context, receiver *model.Receiver) error 
 		options.Update().SetUpsert(false),
 	)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("mongostorage Receivers:%v", err)
+	}
+
+	return nil
 }
 
-//					Delete(ctx context.Context, id string) error
 func (r *Receivers) Delete(ctx context.Context, id string) error {
 
 	mCollection := r.mClient.Database("profile").Collection("receivers")
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("mongostorage Receivers:%v", err)
 	}
 	_, err = mCollection.DeleteOne(ctx,
 		bson.D{
@@ -117,5 +118,9 @@ func (r *Receivers) Delete(ctx context.Context, id string) error {
 		},
 	)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("mongostorage Receivers:%v", err)
+	}
+
+	return nil
 }

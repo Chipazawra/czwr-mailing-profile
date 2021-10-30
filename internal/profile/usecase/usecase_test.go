@@ -2,10 +2,11 @@ package usecases
 
 import (
 	"context"
+	"log"
 	"os"
 	"testing"
 
-	mongodriver "github.com/Chipazawra/czwr-mailing-profile/internal/profile/drivers/mongo"
+	mongodriver "github.com/Chipazawra/czwr-mailing-profile/internal/drivers/mongo"
 	mongostorage "github.com/Chipazawra/czwr-mailing-profile/internal/profile/storage/mongo"
 )
 
@@ -35,4 +36,83 @@ func TestMain(m *testing.M) {
 	exitVal := m.Run()
 	//after test
 	os.Exit(exitVal)
+}
+
+func TestTemplatesCreate(t *testing.T) {
+
+	ctx := context.TODO()
+	template, err := uTemplates.UploadTemplate(ctx, "<title>{{.Title}}</title>")
+
+	if err != nil {
+		t.Errorf("Err = %v", err)
+	} else {
+		log.Printf("Receiver = %v", template)
+	}
+
+}
+func TestReceiverCreate(t *testing.T) {
+
+	ctx := context.TODO()
+	receiver, err := uReceivers.Create(ctx, "uscase_user", "usecase_reveiver")
+
+	if err != nil {
+		t.Errorf("Err = %v", err)
+	} else {
+		log.Printf("Receiver = %v", receiver)
+	}
+
+}
+
+func TestReceiverRead(t *testing.T) {
+
+	ctx := context.TODO()
+
+	receiver, err := uReceivers.Create(ctx, "uscase_user", "usecase_reveiver")
+	if err != nil {
+		t.Errorf("Err = %v", err)
+	}
+
+	res, err := uReceivers.Read(ctx, receiver.User)
+	if res[0].Name != receiver.Name || err != nil {
+		t.Errorf("res[0].Name  = %v; want %v; err = %v", res[0].Name, receiver.Name, err)
+	}
+
+}
+
+func TestReceiverUpdate(t *testing.T) {
+
+	ctx := context.TODO()
+	receiver, err := uReceivers.Create(ctx, "uscase_user", "usecase_reveiver")
+	if err != nil {
+		t.Errorf("Err = %v", err)
+	} else {
+		log.Printf("Receiver = %v", receiver)
+	}
+
+	receiver, err = uReceivers.Update(ctx, receiver.ID, "uscase_user_upd", "usecase_reveiver_upd")
+	if err != nil {
+		t.Errorf("err = %v", err)
+	} else {
+		log.Printf("Receiver = %v", receiver)
+	}
+
+}
+
+func TestReceiverDelete(t *testing.T) {
+
+	ctx := context.TODO()
+	receiver, err := uReceivers.Create(ctx, "uscase_user", "usecase_reveiver_deleted")
+	if err != nil {
+		t.Errorf("Err = %v", err)
+	} else {
+		log.Printf("Receiver = %v", receiver)
+	}
+
+	err = uReceivers.Delete(ctx, receiver.ID)
+	if err != nil {
+		t.Errorf("err = %v", err)
+	} else {
+		log.Printf("Receiver = %v", receiver)
+	}
+
 }
